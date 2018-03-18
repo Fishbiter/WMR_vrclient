@@ -2,7 +2,7 @@
 	"showExeName":true,
 	"default":
 	{
-		"applyMod":false,
+		"applyMod":true,
 		"touchPad":true
 	},
 	"ADR1FT-Win64-Shipping.exe":
@@ -49,6 +49,10 @@
 		"applyMod":false
 	},
 	"steam.exe":
+	{
+		"applyMod":false
+	},
+	"Doom3BFGVR.exe":
 	{
 		"applyMod":false
 	}
