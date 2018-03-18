@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-#include "openvr.h"
 
 struct Settings
 {
@@ -10,8 +9,6 @@ struct Settings
 	bool m_touchPad = false;
 	bool m_pressPad = false;
 	bool m_mapToDPad = false;
-	double m_patchOffset = 0;
-	std::string m_systemVersion = vr::IVRSystem_Version;
 };
 
 extern Settings g_settings;

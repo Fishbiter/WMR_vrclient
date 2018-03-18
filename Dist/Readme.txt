@@ -2,17 +2,11 @@ This is a simple shim that sits infront of vrclient.dll or vrclient_x64.dll and 
 
 I have tested it with a handful of games with mixed results.
 
-Behaviour can be configured using WMR_vr_settings.json file. Note that it currently defaults to disabled, and new games will need to be added. To enable by default, in "default" section change the line
-
-"applyMod":false,  
-
-to 
-
-"applyMod":true,
+Behaviour can be configured using WMR_vr_settings.json file.
 
 Installation:
 
-Copy files to SteamVR bin folder (e.g SteamApps\common\SteamVR\bin) and run install_WMR.bat
+Copy files to SteamVR bin folder (e.g SteamApps\common\SteamVR\bin) and run install_WMR.bat. If successful, it should say "Ready to go".
 
 Uses picojson under the following license:
 

@@ -1,10 +1,4 @@
-#include "stdafx.h"
-#include "VTablePatch.h"
-#include "stdlib.h"
-#include "stdio.h"
-#include "Settings.h"
-#include <algorithm>
-#include <deque>
+//Note this is included into patch files directly
 
 MyVRSystem g_mySystem;
 
@@ -16,7 +10,7 @@ void GenerateTrackPadEvents(int controller, VRControllerState_t* pState, bool re
 {
 	bool touched = (pState->ulButtonTouched & ButtonMaskFromId(k_EButton_SteamVR_Touchpad)) != 0;
 	bool pressed = (pState->ulButtonPressed & ButtonMaskFromId(k_EButton_SteamVR_Touchpad)) != 0;
-	
+
 	if (!releaseOnly || g_touched[controller])
 	{
 		if (touched != g_touched[controller])
@@ -43,6 +37,11 @@ void GenerateTrackPadEvents(int controller, VRControllerState_t* pState, bool re
 			ev.data.controller.button = k_EButton_SteamVR_Touchpad;
 			g_queuedVirtualEvents.push_back(ev);
 		}
+	}
+
+	if (g_queuedVirtualEvents.size() > 100)
+	{
+		g_queuedVirtualEvents.clear(); //probably app is not calling poll event
 	}
 }
 
@@ -75,7 +74,7 @@ void RemapControls(int controller, VRControllerState_t* pState)
 		{
 			if (g_settings.m_touchPad || g_settings.m_pressPad)
 			{
-				pState->rAxis[0] = pState->rAxis[2];
+				pState->rAxis[0] = pState->rAxis[JOYSTICK_AXIS];
 			}
 			if (g_settings.m_touchPad)
 			{
@@ -89,7 +88,7 @@ void RemapControls(int controller, VRControllerState_t* pState)
 			{
 				if (pState->rAxis[JOYSTICK_AXIS].x < -DEADZONE)
 					pState->ulButtonPressed |= ButtonMaskFromId(k_EButton_DPad_Left);
-				else if(pState->rAxis[JOYSTICK_AXIS].x > DEADZONE)
+				else if (pState->rAxis[JOYSTICK_AXIS].x > DEADZONE)
 					pState->ulButtonPressed |= ButtonMaskFromId(k_EButton_DPad_Right);
 				if (pState->rAxis[JOYSTICK_AXIS].y < -DEADZONE)
 					pState->ulButtonPressed |= ButtonMaskFromId(k_EButton_DPad_Down);
@@ -102,6 +101,41 @@ void RemapControls(int controller, VRControllerState_t* pState)
 	}
 }
 
+#if VRSYSTEM_VERSION < 14
+typedef int32_t(__thiscall *GetControllerStateFn)(IVRSystem*, TrackedDeviceIndex_t, VRControllerState_t*);
+FunctionPatch<GetControllerStateFn> g_realGetControllerState;
+
+class ReplaceGetControllerState : public MyVRSystem
+{
+	virtual bool GetControllerState(vr::TrackedDeviceIndex_t unControllerDeviceIndex, vr::VRControllerState_t *pControllerState)
+	{
+		if (g_realGetControllerState.m_symbol(this, unControllerDeviceIndex, pControllerState))
+		{
+			RemapControls(unControllerDeviceIndex, pControllerState);
+
+			return true;
+		}
+		return false;
+	}
+} g_replaceGetControllerState;
+
+typedef int32_t(__thiscall *GetControllerStateWithPoseFn)(IVRSystem*, TrackingUniverseOrigin, TrackedDeviceIndex_t, VRControllerState_t*, TrackedDevicePose_t*);
+FunctionPatch<GetControllerStateWithPoseFn> g_realGetControllerStateWithPose;
+
+class ReplaceGetControllerStateWithPose : public MyVRSystem
+{
+	virtual bool GetControllerStateWithPose(TrackingUniverseOrigin eOrigin, vr::TrackedDeviceIndex_t unControllerDeviceIndex, vr::VRControllerState_t *pControllerState, TrackedDevicePose_t *pTrackedDevicePose)
+	{
+		if (g_realGetControllerStateWithPose.m_symbol(this, eOrigin, unControllerDeviceIndex, pControllerState, pTrackedDevicePose))
+		{
+			RemapControls(unControllerDeviceIndex, pControllerState);
+
+			return true;
+		}
+		return false;
+	}
+} g_replaceGetControllerStateWithPose;
+#else
 typedef int32_t(__thiscall *GetControllerStateFn)(IVRSystem*, TrackedDeviceIndex_t, VRControllerState_t*, uint32_t);
 FunctionPatch<GetControllerStateFn> g_realGetControllerState;
 
@@ -119,7 +153,7 @@ class ReplaceGetControllerState : public MyVRSystem
 	}
 } g_replaceGetControllerState;
 
-typedef int32_t(__thiscall *GetControllerStateWithPoseFn)(IVRSystem*,  ETrackingUniverseOrigin, TrackedDeviceIndex_t, VRControllerState_t*, uint32_t, TrackedDevicePose_t*);
+typedef int32_t(__thiscall *GetControllerStateWithPoseFn)(IVRSystem*, ETrackingUniverseOrigin, TrackedDeviceIndex_t, VRControllerState_t*, uint32_t, TrackedDevicePose_t*);
 FunctionPatch<GetControllerStateWithPoseFn> g_realGetControllerStateWithPose;
 
 class ReplaceGetControllerStateWithPose : public MyVRSystem
@@ -135,7 +169,53 @@ class ReplaceGetControllerStateWithPose : public MyVRSystem
 		return false;
 	}
 } g_replaceGetControllerStateWithPose;
+#endif
 
+#if VRSYSTEM_VERSION < 11
+typedef bool(__thiscall *PollNextEventFn)(IVRSystem*, VREvent_t*);
+FunctionPatch<PollNextEventFn> g_realPollNextEvent;
+
+class ReplacePollNextEvent : public MyVRSystem
+{
+	virtual bool PollNextEvent(VREvent_t *pEvent)
+	{
+		bool res = DequeueEvent(pEvent, nullptr) || g_realPollNextEvent.m_symbol(this, pEvent);
+
+		return res;
+	}
+} g_replacePollNextEvent;
+
+typedef bool(__thiscall *PollNextEventWithPoseFn)(IVRSystem*, TrackingUniverseOrigin, VREvent_t*, vr::TrackedDevicePose_t*);
+FunctionPatch<PollNextEventWithPoseFn> g_realPollNextEventWithPose;
+
+TrackedDevicePose_t g_lastPose[10];
+
+class ReplacePollNextEventWithPose : public MyVRSystem
+{
+	virtual bool PollNextEventWithPose(TrackingUniverseOrigin eOrigin, VREvent_t *pEvent, vr::TrackedDevicePose_t *pTrackedDevicePose)
+	{
+		if (DequeueEvent(pEvent, pTrackedDevicePose))
+		{
+			if ((int)pEvent->trackedDeviceIndex >= 0)
+			{
+				*pTrackedDevicePose = g_lastPose[pEvent->trackedDeviceIndex];
+			}
+			return true;
+		}
+
+		if (g_realPollNextEventWithPose.m_symbol(this, eOrigin, pEvent, pTrackedDevicePose))
+		{
+			if ((int)pEvent->trackedDeviceIndex >= 0)
+			{
+				g_lastPose[pEvent->trackedDeviceIndex] = *pTrackedDevicePose;
+			}
+			return true;
+		}
+
+		return false;
+	}
+} g_replacePollNextEventWithPose;
+#else
 typedef bool(__thiscall *PollNextEventFn)(IVRSystem*, VREvent_t*, uint32_t);
 FunctionPatch<PollNextEventFn> g_realPollNextEvent;
 
@@ -179,11 +259,16 @@ class ReplacePollNextEventWithPose : public MyVRSystem
 		return false;
 	}
 } g_replacePollNextEventWithPose;
+#endif
+
 
 IVRSystem* g_pVRSystem;
 
 void PatchVRSystem(void* pVRSystem, const char* interfaceVersion)
 {
+	if (std::string(interfaceVersion) != vr::IVRSystem_Version || pVRSystem == g_pVRSystem)
+		return;
+
 	g_pVRSystem = (IVRSystem*)pVRSystem;
 
 	InstallWritableVtable(g_pVRSystem);
@@ -197,6 +282,9 @@ void PatchVRSystem(void* pVRSystem, const char* interfaceVersion)
 
 void RemovePatchVRSystem()
 {
+	if (!g_pVRSystem)
+		return;
+
 	RemovePatchVTable(g_pVRSystem, g_realGetControllerState);
 	RemovePatchVTable(g_pVRSystem, g_realGetControllerStateWithPose);
 	RemovePatchVTable(g_pVRSystem, g_realPollNextEvent);

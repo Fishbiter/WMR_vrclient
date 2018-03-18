@@ -3,7 +3,7 @@
 #include "stdlib.h"
 #include "stdio.h"
 
-void** VTable(IVRSystem* pVRSystem)
+void** VTable(void* pVRSystem)
 {
 	return (*((void****)&pVRSystem))[0];
 }
@@ -15,7 +15,7 @@ int GetNumberEntries(void** vtable)
 	return count;
 }
 
-void InstallWritableVtable(IVRSystem* system)
+void InstallWritableVtable(void* system)
 {
 	void** vtable = VTable(system);
 	int size = GetNumberEntries(vtable);

@@ -5,24 +5,11 @@
 		"applyMod":true,
 		"touchPad":true
 	},
-	"ADR1FT-Win64-Shipping.exe":
-	{
-		"comment":"uses a very old version of openvr (0.9.12) - not working yet",
-		"applyMod":false,
-		"touchPad":true,
-		"systemVersion":"IVRSystem_009",
-		"patchOffset":-4
-	},
 	"Earth.exe":
 	{
 		"applyMod":true,
 		"touchPad":true,
 		"pressPad":true
-	},
-	"TheExorcistLegionVR.exe":
-	{
-		"applyMod":true,
-		"touchPad":true
 	},
 	"vrstartup.exe":
 	{

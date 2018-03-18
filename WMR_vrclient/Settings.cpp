@@ -2,6 +2,7 @@
 #include "Settings.h"
 #include "picojson/picojson.h"
 #include <fstream>
+#include "VRSystemPatch/openvr019.h"
 
 Settings g_settings;
 
@@ -16,7 +17,6 @@ template<class T> void Set(picojson::value& node, T& member, const char* name)
 	}
 	g_log << name << "=" << member << "\n";
 }
-
 
 void Settings::LoadForExe(wchar_t* exeName, wchar_t* settingsPath)
 {
@@ -55,8 +55,6 @@ void Settings::LoadForExe(wchar_t* exeName, wchar_t* settingsPath)
 				Set<bool>(node, m_touchPad, "touchPad");
 				Set<bool>(node, m_pressPad, "pressPad");
 				Set<bool>(node, m_mapToDPad, "mapToDPad");
-				Set<std::string>(node, m_systemVersion, "systemVersion");
-				Set<double>(node, m_patchOffset, "patchOffset");
 			}
 		}
 	}
