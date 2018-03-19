@@ -1,4 +1,5 @@
 {
+	"deadzone":0.15,
 	"showExeName":true,
 	"default":
 	{

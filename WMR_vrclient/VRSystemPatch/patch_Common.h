@@ -68,8 +68,7 @@ void RemapControls(int controller, VRControllerState_t* pState)
 	else
 	{
 		const int JOYSTICK_AXIS = 2;
-		const float DEADZONE = 0.15f;
-		bool inDeadzone = fabs(pState->rAxis[JOYSTICK_AXIS].x) < DEADZONE && fabs(pState->rAxis[JOYSTICK_AXIS].y) < DEADZONE;
+		bool inDeadzone = fabs(pState->rAxis[JOYSTICK_AXIS].x) < g_settings.m_deadzone && fabs(pState->rAxis[JOYSTICK_AXIS].y) < g_settings.m_deadzone;
 		if (!inDeadzone)
 		{
 			if (g_settings.m_touchPad || g_settings.m_pressPad)
@@ -86,13 +85,13 @@ void RemapControls(int controller, VRControllerState_t* pState)
 			}
 			if (g_settings.m_mapToDPad)
 			{
-				if (pState->rAxis[JOYSTICK_AXIS].x < -DEADZONE)
+				if (pState->rAxis[JOYSTICK_AXIS].x < -g_settings.m_deadzone)
 					pState->ulButtonPressed |= ButtonMaskFromId(k_EButton_DPad_Left);
-				else if (pState->rAxis[JOYSTICK_AXIS].x > DEADZONE)
+				else if (pState->rAxis[JOYSTICK_AXIS].x > g_settings.m_deadzone)
 					pState->ulButtonPressed |= ButtonMaskFromId(k_EButton_DPad_Right);
-				if (pState->rAxis[JOYSTICK_AXIS].y < -DEADZONE)
+				if (pState->rAxis[JOYSTICK_AXIS].y < -g_settings.m_deadzone)
 					pState->ulButtonPressed |= ButtonMaskFromId(k_EButton_DPad_Down);
-				else if (pState->rAxis[JOYSTICK_AXIS].y > DEADZONE)
+				else if (pState->rAxis[JOYSTICK_AXIS].y > g_settings.m_deadzone)
 					pState->ulButtonPressed |= ButtonMaskFromId(k_EButton_DPad_Up);
 			}
 		}

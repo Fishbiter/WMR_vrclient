@@ -47,14 +47,17 @@ void Settings::LoadForExe(wchar_t* exeName, wchar_t* settingsPath)
 			node = exes.get("default");
 		}
 
+		Set(exes, m_deadzone, "deadzone");
+
 		if(node.is<picojson::object>())
 		{
-			Set<bool>(node, m_applyMod, "applyMod");
+			Set(node, m_applyMod, "applyMod");
 			if (m_applyMod)
 			{
-				Set<bool>(node, m_touchPad, "touchPad");
-				Set<bool>(node, m_pressPad, "pressPad");
-				Set<bool>(node, m_mapToDPad, "mapToDPad");
+				Set(node, m_touchPad, "touchPad");
+				Set(node, m_pressPad, "pressPad");
+				Set(node, m_mapToDPad, "mapToDPad");
+				Set(node, m_deadzone, "deadzone");
 			}
 		}
 	}
