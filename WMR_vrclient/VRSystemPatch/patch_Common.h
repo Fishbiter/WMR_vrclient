@@ -8,6 +8,9 @@ std::deque<VREvent_t> g_queuedVirtualEvents;
 
 void GenerateTrackPadEvents(int controller, VRControllerState_t* pState, bool releaseOnly)
 {
+	if (!g_settings.m_generateEvents)
+		return;
+
 	bool touched = (pState->ulButtonTouched & ButtonMaskFromId(k_EButton_SteamVR_Touchpad)) != 0;
 	bool pressed = (pState->ulButtonPressed & ButtonMaskFromId(k_EButton_SteamVR_Touchpad)) != 0;
 
@@ -187,7 +190,7 @@ class ReplacePollNextEvent : public MyVRSystem
 typedef bool(__thiscall *PollNextEventWithPoseFn)(IVRSystem*, TrackingUniverseOrigin, VREvent_t*, vr::TrackedDevicePose_t*);
 FunctionPatch<PollNextEventWithPoseFn> g_realPollNextEventWithPose;
 
-TrackedDevicePose_t g_lastPose[10];
+TrackedDevicePose_t g_lastPose[k_unMaxTrackedDeviceCount];
 
 class ReplacePollNextEventWithPose : public MyVRSystem
 {

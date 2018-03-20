@@ -10,6 +10,7 @@ struct Settings
 	bool m_pressPad = false;
 	bool m_mapToDPad = false;
 	double m_deadzone = 0.15f;
+	bool m_generateEvents = true;
 };
 
 extern Settings g_settings;

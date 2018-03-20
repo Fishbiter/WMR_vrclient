@@ -58,6 +58,7 @@ void Settings::LoadForExe(wchar_t* exeName, wchar_t* settingsPath)
 				Set(node, m_pressPad, "pressPad");
 				Set(node, m_mapToDPad, "mapToDPad");
 				Set(node, m_deadzone, "deadzone");
+				Set(node, m_generateEvents, "generateEvents");
 			}
 		}
 	}
