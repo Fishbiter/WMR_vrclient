@@ -11,6 +11,7 @@ struct Settings
 	bool m_mapToDPad = false;
 	double m_deadzone = 0.15f;
 	bool m_generateEvents = true;
+	bool m_mapRightUpDownToLeftPadClick = false;
 };
 
 extern Settings g_settings;

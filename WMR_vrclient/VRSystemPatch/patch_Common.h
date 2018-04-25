@@ -5,6 +5,10 @@ MyVRSystem g_mySystem;
 bool g_touched[5];
 bool g_pressed[5];
 std::deque<VREvent_t> g_queuedVirtualEvents;
+bool g_simulateLeftClick = false;
+
+const int LEFT_CONTROLLER = 1;
+const int RIGHT_CONTROLLER = 2;
 
 void GenerateTrackPadEvents(int controller, VRControllerState_t* pState, bool releaseOnly)
 {
@@ -70,10 +74,21 @@ void RemapControls(int controller, VRControllerState_t* pState)
 	}
 	else
 	{
+		if (controller == RIGHT_CONTROLLER)
+		{
+			g_simulateLeftClick = false;
+		}
+		
 		const int JOYSTICK_AXIS = 2;
 		bool inDeadzone = fabs(pState->rAxis[JOYSTICK_AXIS].x) < g_settings.m_deadzone && fabs(pState->rAxis[JOYSTICK_AXIS].y) < g_settings.m_deadzone;
 		if (!inDeadzone)
 		{
+			if (controller == RIGHT_CONTROLLER && g_settings.m_mapRightUpDownToLeftPadClick && fabs(pState->rAxis[JOYSTICK_AXIS].y) >= g_settings.m_deadzone)
+			{
+				g_simulateLeftClick = true;
+				pState->rAxis[JOYSTICK_AXIS].y = 0;
+			}
+			
 			if (g_settings.m_touchPad || g_settings.m_pressPad)
 			{
 				pState->rAxis[0] = pState->rAxis[JOYSTICK_AXIS];
@@ -97,6 +112,11 @@ void RemapControls(int controller, VRControllerState_t* pState)
 				else if (pState->rAxis[JOYSTICK_AXIS].y > g_settings.m_deadzone)
 					pState->ulButtonPressed |= ButtonMaskFromId(k_EButton_DPad_Up);
 			}
+		}
+
+		if (controller == LEFT_CONTROLLER && g_simulateLeftClick)
+		{
+			pState->ulButtonPressed |= ButtonMaskFromId(k_EButton_SteamVR_Touchpad);
 		}
 
 		GenerateTrackPadEvents(controller, pState, false);

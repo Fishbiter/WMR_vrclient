@@ -8,6 +8,8 @@ Installation:
 
 Copy files to SteamVR bin folder (e.g SteamApps\common\SteamVR\bin) and run install_WMR.bat. If successful, it should say "Ready to go".
 
+If Steam updates SteamVR you will need to re-install. Delete real_vrclient.dll and real_vrclient_x86.dll before re-installing.
+
 Uses picojson under the following license:
 
 Copyright 2009-2010 Cybozu Labs, Inc.

@@ -43,5 +43,15 @@
 	"Doom3BFGVR.exe":
 	{
 		"applyMod":false
+	},
+	"SkyrimVR.exe":
+	{
+		"applyMod":false
+	},
+	"Onward.exe":
+	{
+		"applyMod":true,
+		"touchPad":true,
+		"mapRightUpDownToLeftPadClick":true
 	}
 }
