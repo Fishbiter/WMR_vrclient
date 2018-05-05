@@ -12,6 +12,8 @@ struct Settings
 	double m_deadzone = 0.15f;
 	bool m_generateEvents = true;
 	bool m_mapRightUpDownToLeftPadClick = false;
+	bool m_southpaw = false;
+	bool m_flipXY = false;
 };
 
 extern Settings g_settings;

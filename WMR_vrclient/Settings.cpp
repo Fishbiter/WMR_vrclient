@@ -48,7 +48,7 @@ void Settings::LoadForExe(wchar_t* exeName, wchar_t* settingsPath)
 		}
 
 		Set(exes, m_deadzone, "deadzone");
-
+		
 		if(node.is<picojson::object>())
 		{
 			Set(node, m_applyMod, "applyMod");
@@ -60,6 +60,8 @@ void Settings::LoadForExe(wchar_t* exeName, wchar_t* settingsPath)
 				Set(node, m_deadzone, "deadzone");
 				Set(node, m_generateEvents, "generateEvents");
 				Set(node, m_mapRightUpDownToLeftPadClick, "mapRightUpDownToLeftPadClick");
+				Set(node, m_southpaw, "swapControllers");
+				Set(node, m_flipXY, "flipXY");
 			}
 		}
 	}

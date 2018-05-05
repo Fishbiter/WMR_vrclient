@@ -4,7 +4,8 @@
 	"default":
 	{
 		"applyMod":true,
-		"touchPad":true
+		"touchPad":true,
+		"swapControllers":false
 	},
 	"Earth.exe":
 	{
@@ -53,5 +54,11 @@
 		"applyMod":true,
 		"touchPad":true,
 		"mapRightUpDownToLeftPadClick":true
+	},
+	"YouTubeVR.exe":
+	{
+		"applyMod":true,
+		"touchPad":true,
+		"flipXY":true
 	}
 }

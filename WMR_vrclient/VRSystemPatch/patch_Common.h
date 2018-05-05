@@ -10,6 +10,8 @@ bool g_simulateLeftClick = false;
 const int LEFT_CONTROLLER = 1;
 const int RIGHT_CONTROLLER = 2;
 
+static VRControllerState_t g_swapStates[3];
+
 void GenerateTrackPadEvents(int controller, VRControllerState_t* pState, bool releaseOnly)
 {
 	if (!g_settings.m_generateEvents)
@@ -52,6 +54,19 @@ void GenerateTrackPadEvents(int controller, VRControllerState_t* pState, bool re
 	}
 }
 
+void GenerateTouchedEvent(int controller)
+{
+	if (!g_settings.m_generateEvents)
+		return;
+
+	VREvent_t ev;
+	ev.trackedDeviceIndex = controller;
+	ev.eventAgeSeconds = 0.0f;
+	ev.eventType = VREvent_ButtonTouch;
+	ev.data.controller.button = k_EButton_SteamVR_Touchpad;
+	g_queuedVirtualEvents.push_back(ev);
+}
+
 bool DequeueEvent(VREvent_t* ev, TrackedDevicePose_t* pose)
 {
 	if (g_queuedVirtualEvents.empty())
@@ -67,6 +82,31 @@ bool DequeueEvent(VREvent_t* ev, TrackedDevicePose_t* pose)
 
 void RemapControls(int controller, VRControllerState_t* pState)
 {
+	const int JOYSTICK_AXIS = 2;
+
+	VRControllerState_t* pSrcState = pState;
+	if (controller == LEFT_CONTROLLER || controller == RIGHT_CONTROLLER)
+	{
+		g_swapStates[controller] = *pState;
+	}
+	if (g_settings.m_southpaw)
+	{
+		bool inDeadzone = fabs(pSrcState->rAxis[JOYSTICK_AXIS].x) < g_settings.m_deadzone && fabs(pSrcState->rAxis[JOYSTICK_AXIS].y) < g_settings.m_deadzone;
+		
+		if (controller == LEFT_CONTROLLER)
+		{
+			pSrcState = &g_swapStates[RIGHT_CONTROLLER];
+			if (!inDeadzone)
+				GenerateTouchedEvent(RIGHT_CONTROLLER);
+		}
+		else
+		{
+			pSrcState = &g_swapStates[LEFT_CONTROLLER];
+			if (!inDeadzone)
+				GenerateTouchedEvent(LEFT_CONTROLLER);
+		}
+	}
+	
 	if ((pState->ulButtonPressed & ButtonMaskFromId(k_EButton_SteamVR_Touchpad)) != 0 || (pState->ulButtonTouched & ButtonMaskFromId(k_EButton_SteamVR_Touchpad)) != 0)
 	{
 		//do nothing - want to be able to press touchpad (but release any events we made up earlier!)
@@ -79,19 +119,24 @@ void RemapControls(int controller, VRControllerState_t* pState)
 			g_simulateLeftClick = false;
 		}
 		
-		const int JOYSTICK_AXIS = 2;
-		bool inDeadzone = fabs(pState->rAxis[JOYSTICK_AXIS].x) < g_settings.m_deadzone && fabs(pState->rAxis[JOYSTICK_AXIS].y) < g_settings.m_deadzone;
+		bool inDeadzone = fabs(pSrcState->rAxis[JOYSTICK_AXIS].x) < g_settings.m_deadzone && fabs(pSrcState->rAxis[JOYSTICK_AXIS].y) < g_settings.m_deadzone;
 		if (!inDeadzone)
 		{
-			if (controller == RIGHT_CONTROLLER && g_settings.m_mapRightUpDownToLeftPadClick && fabs(pState->rAxis[JOYSTICK_AXIS].y) >= g_settings.m_deadzone)
+			if (controller == RIGHT_CONTROLLER && g_settings.m_mapRightUpDownToLeftPadClick && fabs(pSrcState->rAxis[JOYSTICK_AXIS].y) >= g_settings.m_deadzone)
 			{
 				g_simulateLeftClick = true;
-				pState->rAxis[JOYSTICK_AXIS].y = 0;
+				pSrcState->rAxis[JOYSTICK_AXIS].y = 0;
 			}
 			
 			if (g_settings.m_touchPad || g_settings.m_pressPad)
 			{
-				pState->rAxis[0] = pState->rAxis[JOYSTICK_AXIS];
+				pState->rAxis[0] = pSrcState->rAxis[JOYSTICK_AXIS];
+
+				if (g_settings.m_flipXY)
+				{
+					pState->rAxis[0].x *= -1.0f;
+					pState->rAxis[0].y *= -1.0f;
+				}
 			}
 			if (g_settings.m_touchPad)
 			{
@@ -103,13 +148,13 @@ void RemapControls(int controller, VRControllerState_t* pState)
 			}
 			if (g_settings.m_mapToDPad)
 			{
-				if (pState->rAxis[JOYSTICK_AXIS].x < -g_settings.m_deadzone)
+				if (pSrcState->rAxis[JOYSTICK_AXIS].x < -g_settings.m_deadzone)
 					pState->ulButtonPressed |= ButtonMaskFromId(k_EButton_DPad_Left);
-				else if (pState->rAxis[JOYSTICK_AXIS].x > g_settings.m_deadzone)
+				else if (pSrcState->rAxis[JOYSTICK_AXIS].x > g_settings.m_deadzone)
 					pState->ulButtonPressed |= ButtonMaskFromId(k_EButton_DPad_Right);
-				if (pState->rAxis[JOYSTICK_AXIS].y < -g_settings.m_deadzone)
+				if (pSrcState->rAxis[JOYSTICK_AXIS].y < -g_settings.m_deadzone)
 					pState->ulButtonPressed |= ButtonMaskFromId(k_EButton_DPad_Down);
-				else if (pState->rAxis[JOYSTICK_AXIS].y > g_settings.m_deadzone)
+				else if (pSrcState->rAxis[JOYSTICK_AXIS].y > g_settings.m_deadzone)
 					pState->ulButtonPressed |= ButtonMaskFromId(k_EButton_DPad_Up);
 			}
 		}
