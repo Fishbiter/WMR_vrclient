@@ -107,6 +107,16 @@ void RemapControls(int controller, VRControllerState_t* pState)
 		}
 	}
 	
+	//request: filter joystick moves in deadzone - this should be harmless in the normal case?
+	if (fabs(pSrcState->rAxis[JOYSTICK_AXIS].x) < g_settings.m_deadzone)
+	{
+		pSrcState->rAxis[JOYSTICK_AXIS].x = 0;
+	}
+	if (fabs(pSrcState->rAxis[JOYSTICK_AXIS].y) < g_settings.m_deadzone)
+	{
+		pSrcState->rAxis[JOYSTICK_AXIS].y = 0;
+	}
+
 	if ((pState->ulButtonPressed & ButtonMaskFromId(k_EButton_SteamVR_Touchpad)) != 0 || (pState->ulButtonTouched & ButtonMaskFromId(k_EButton_SteamVR_Touchpad)) != 0)
 	{
 		//do nothing - want to be able to press touchpad (but release any events we made up earlier!)
