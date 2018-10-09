@@ -48,6 +48,7 @@ void Settings::LoadForExe(wchar_t* exeName, wchar_t* settingsPath)
 		}
 
 		Set(exes, m_deadzone, "deadzone");
+		Set(exes, m_traceEvents, "traceEvents");
 		
 		if(node.is<picojson::object>())
 		{

@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "patch_Include.h"
+#include <fstream>
+extern std::ofstream g_log;
 
 namespace IVRSystem_011
 {

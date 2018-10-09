@@ -14,6 +14,7 @@ struct Settings
 	bool m_mapRightUpDownToLeftPadClick = false;
 	bool m_southpaw = false;
 	bool m_flipXY = false;
+	bool m_traceEvents = false;
 };
 
 extern Settings g_settings;

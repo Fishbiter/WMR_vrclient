@@ -168,6 +168,14 @@ void RemapControls(int controller, VRControllerState_t* pState)
 	}
 }
 
+void TraceEvent(VREvent_t* pEvent)
+{
+	if (!g_settings.m_traceEvents)
+		return;
+
+	g_log << "-------------------------------\nEvent:\nType:" << pEvent->eventType << "\nDeviceIndex:" << pEvent->trackedDeviceIndex << "\nData:" << pEvent->data.controller.button << "\n-------------------------------\n";
+}
+
 #if VRSYSTEM_VERSION < 14
 typedef int32_t(__thiscall *GetControllerStateFn)(IVRSystem*, TrackedDeviceIndex_t, VRControllerState_t*);
 FunctionPatch<GetControllerStateFn> g_realGetControllerState;
@@ -246,9 +254,18 @@ class ReplacePollNextEvent : public MyVRSystem
 {
 	virtual bool PollNextEvent(VREvent_t *pEvent)
 	{
-		bool res = DequeueEvent(pEvent, nullptr) || g_realPollNextEvent.m_symbol(this, pEvent);
+		if (DequeueEvent(pEvent, nullptr))
+		{
+			return true;
+		}
+		
+		if (g_realPollNextEvent.m_symbol(this, pEvent))
+		{
+			TraceEvent(pEvent);
+			return true;
+		}
 
-		return res;
+		return false;
 	}
 } g_replacePollNextEvent;
 
@@ -272,6 +289,7 @@ class ReplacePollNextEventWithPose : public MyVRSystem
 
 		if (g_realPollNextEventWithPose.m_symbol(this, eOrigin, pEvent, pTrackedDevicePose))
 		{
+			TraceEvent(pEvent);
 			if ((int)pEvent->trackedDeviceIndex >= 0)
 			{
 				g_lastPose[pEvent->trackedDeviceIndex] = *pTrackedDevicePose;
@@ -290,9 +308,18 @@ class ReplacePollNextEvent : public MyVRSystem
 {
 	virtual bool PollNextEvent(VREvent_t *pEvent, uint32_t uncbVREvent)
 	{
-		bool res = DequeueEvent(pEvent, nullptr) || g_realPollNextEvent.m_symbol(this, pEvent, uncbVREvent);
+		if (DequeueEvent(pEvent, nullptr))
+		{
+			return true;
+		}
 
-		return res;
+		if (g_realPollNextEvent.m_symbol(this, pEvent, uncbVREvent))
+		{
+			TraceEvent(pEvent);
+			return true;
+		}
+
+		return false;
 	}
 } g_replacePollNextEvent;
 
@@ -316,6 +343,7 @@ class ReplacePollNextEventWithPose : public MyVRSystem
 
 		if (g_realPollNextEventWithPose.m_symbol(this, eOrigin, pEvent, uncbVREvent, pTrackedDevicePose))
 		{
+			TraceEvent(pEvent);
 			if ((int)pEvent->trackedDeviceIndex >= 0)
 			{
 				g_lastPose[pEvent->trackedDeviceIndex] = *pTrackedDevicePose;
