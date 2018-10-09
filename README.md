@@ -11,6 +11,10 @@ Installation:
 
 Copy files to SteamVR bin folder (e.g SteamApps\common\SteamVR\bin) and run install_WMR.bat. If successful, it will say "Ready to go"
 
+Steam VR updates:
+
+When SteamVR updates it will undo the patch. To redo, you must make sure that real_vrclient and real_vrclient_x86 are removed and re-run the installation script.
+
 Uses picojson under the following license:
 
 Copyright 2009-2010 Cybozu Labs, Inc.
